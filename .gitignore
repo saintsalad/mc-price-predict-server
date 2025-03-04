@@ -1,0 +1,23 @@
+# Start Generation Here
+# Python cache files
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+
+# FastAPI specific
+*.db
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Virtual environment
+venv/
+env/
+.venv/
+.env/
+
+# End Generation Here
