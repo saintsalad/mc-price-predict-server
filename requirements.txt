@@ -1,25 +1,22 @@
 # Web Framework and Server
-fastapi==0.104.1
-uvicorn==0.24.0
+fastapi
+uvicorn
 
 # Data Processing and Machine Learning
-numpy==1.24.3
-pandas==2.0.3
-scikit-learn==1.3.0
-joblib==1.3.2
+numpy>=1.21.0
+pandas
+scikit-learn
+joblib
 
 # API and Environment
-openai==1.3.0
-python-dotenv==1.0.0
+openai
+python-dotenv
 
 # Data Validation
-pydantic==2.4.2
-
-# Database
-sqlite3-utils==3.35.2
+pydantic
 
 # CORS and Middleware
-python-multipart==0.0.6
+python-multipart
 
 # Development and Testing
 pytest==7.4.3
