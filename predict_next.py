@@ -391,63 +391,10 @@ def adjust_for_mileage(price: float, mileage: int, data: MotorcycleInput = None)
 
 def create_prediction_response(predicted_price: float, data: MotorcycleInput, age: int) -> Dict[str, Any]:
     """Create the prediction response with detailed market information"""
-    # Calculate confidence based on multiple factors
-    base_confidence = 85  # Base confidence
-    confidence_adjustments = []
-    
-    # 1. Model confidence from R² if available
+    # Use a default confidence if model_info is not available
+    confidence = 85
     if model_info and 'metrics' in model_info and 'r2' in model_info['metrics']:
-        base_confidence = model_info['metrics']['r2'] * 100
-    
-    # 2. Data quality factors
-    confidence_factors = {
-        # Age affects confidence - newer vehicles are more predictable
-        'age': max(0, 100 - (age * 3)) / 100,  # -3% per year
-        
-        # Mileage affects confidence - higher mileage means more uncertainty
-        'mileage': max(0, 100 - (data.condition.mileage / 1000)) / 100,  # -1% per 1000km
-        
-        # Known issues reduce confidence
-        'issues': 0.95 if not data.condition.knownIssues else 0.85,
-        
-        # Multiple owners reduce confidence
-        'ownership': {
-            "1": 1.0,    # First owner - highest confidence
-            "2": 0.95,   # Second owner
-            "3": 0.90,   # Third owner
-            "4+": 0.85   # Four or more owners
-        }.get(data.condition.owner, 0.85),
-        
-        # Popular models have more data points, thus higher confidence
-        'model_popularity': 1.1 if any(model in data.model for model in 
-            ["Mio", "Click", "Nmax", "XRM", "Sniper", "Raider", "TMX", "Barako", "RS150"]) else 1.0,
-        
-        # Common brands have more data points
-        'brand_popularity': 1.1 if data.brand in ["Honda", "Yamaha", "Suzuki", "Kawasaki"] else 1.0
-    }
-    
-    # Calculate final confidence
-    confidence_multiplier = (
-        confidence_factors['age'] *
-        confidence_factors['mileage'] *
-        confidence_factors['issues'] *
-        confidence_factors['ownership'] *
-        confidence_factors['model_popularity'] *
-        confidence_factors['brand_popularity']
-    )
-    
-    final_confidence = min(99, base_confidence * confidence_multiplier)  # Cap at 99%
-    
-    # Log confidence calculation details
-    logger.info(f"Confidence calculation:")
-    logger.info(f"- Base confidence: {base_confidence:.1f}%")
-    logger.info(f"- Age factor: {confidence_factors['age']:.2f}")
-    logger.info(f"- Mileage factor: {confidence_factors['mileage']:.2f}")
-    logger.info(f"- Issues factor: {confidence_factors['issues']:.2f}")
-    logger.info(f"- Ownership factor: {confidence_factors['ownership']:.2f}")
-    logger.info(f"- Model popularity: {confidence_factors['model_popularity']:.2f}")
-    logger.info(f"- Brand popularity: {confidence_factors['brand_popularity']:.2f}")
-    logger.info(f"Final confidence: {final_confidence:.1f}%")
+        confidence = model_info['metrics']['r2'] * 100
     
     # Market analysis based on the prediction data
     market_position = "average"
@@ -479,8 +426,8 @@ def create_prediction_response(predicted_price: float, data: MotorcycleInput, ag
         liquidity_bonus += 0.1
     
     # Calculate price ranges (±10% for high confidence, ±15% for lower)
-    price_min = round(predicted_price * (0.9 if final_confidence > 90 else 0.85))
-    price_max = round(predicted_price * (1.1 if final_confidence > 90 else 1.15))
+    price_min = round(predicted_price * (0.9 if confidence > 90 else 0.85))
+    price_max = round(predicted_price * (1.1 if confidence > 90 else 1.15))
     
     # Calculate value retention percentage compared to new price
     estimated_new_price = PRICE_METRICS["BASE_PRICE"]
@@ -504,7 +451,7 @@ def create_prediction_response(predicted_price: float, data: MotorcycleInput, ag
     
     return {
         "pricePredicted": round(predicted_price),
-        "confidence": f"{final_confidence:.1f}%",
+        "confidence": f"{confidence:.1f}%",
         "priceRange": {
             "min": price_min,
             "max": price_max
