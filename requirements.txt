@@ -3,14 +3,10 @@ fastapi
 uvicorn
 
 # Data Processing and Machine Learning
-numpy>=1.21.0
+numpy
 pandas
 scikit-learn
 joblib
-
-# API and Environment
-openai
-python-dotenv
 
 # Data Validation
 pydantic

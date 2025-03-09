@@ -26,14 +26,10 @@ app.include_router(database.router, prefix="/api")  # Add prefix for database ro
 @app.on_event("startup")
 async def startup_event():
     """Runs when the API server starts."""
-    if predict.client is None:
-        predict.logger.error("⚠️ OpenAI client failed to initialize")
-        predict.client = predict.get_openai_client()
+    if predict.ml_model is None:
+        predict.logger.error("⚠️ ML model failed to load")
     else:
-        predict.logger.info("✅ OpenAI client is ready")
-    
-    if not predict.os.getenv('OPENAI_API_KEY'):
-        predict.logger.warning("⚠️ OPENAI_API_KEY not found in environment variables")
+        predict.logger.info("✅ ML model is ready")
     
     print("🚀 API Server starting up...")
 
