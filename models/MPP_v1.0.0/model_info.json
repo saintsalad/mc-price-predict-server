@@ -1,11 +1,14 @@
 {
-    "training_file": "training_data\\training_records_20250309_200219.csv",
-    "training_date": "2025-03-09T20:02:31.449692",
+    "model_name": "MPP_v1.0.0",
+    "version": "v1.0.0",
+    "r2_score": 0.9834521715424375,
+    "training_file": "training_data\\training_records_20250313_131255.csv",
+    "training_date": "2025-03-13T13:12:57.741328",
     "metrics": {
-        "mae": 3496.6307391775126,
-        "mse": 17917871.154475134,
-        "rmse": 4232.950643992336,
-        "r2": 0.9834521715424374
+        "mae": 3496.6307391775017,
+        "mse": 17917871.154475078,
+        "rmse": 4232.95064399233,
+        "r2": 0.9834521715424375
     },
     "feature_importance": [
         {

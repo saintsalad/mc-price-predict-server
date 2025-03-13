@@ -28,11 +28,44 @@ def get_latest_training_file():
     latest_file = max(files)
     return os.path.join(training_dir, latest_file)
 
+def get_next_version():
+    """Get the next version number based on previous versions."""
+    version_file = os.path.join('models', 'version_info.json')
+    
+    # Default starting version
+    version = {"major": 1, "minor": 0, "patch": 0}
+    
+    # Check if version file exists
+    if os.path.exists(version_file):
+        try:
+            with open(version_file, 'r') as f:
+                version = json.load(f)
+                # Increment patch version by default
+                version["patch"] += 1
+        except:
+            # If file exists but can't be read, start fresh
+            logger.warning("Could not read version file, starting with v1.0.0")
+    
+    # Save updated version
+    os.makedirs(os.path.dirname(version_file), exist_ok=True)
+    with open(version_file, 'w') as f:
+        json.dump(version, f, indent=4)
+    
+    return version
+
 def setup_model_directory():
-    """Create a new timestamped directory for the current model version."""
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    """Create a new directory for the current model version."""
+    # Get next version
+    version = get_next_version()
+    
+    # Format version string
+    version_str = f"v{version['major']}.{version['minor']}.{version['patch']}"
+    
+    # Create model name
+    model_name = f"MPP_{version_str}"
+    
     base_dir = 'models'
-    version_dir = os.path.join(base_dir, f'version_{timestamp}')
+    version_dir = os.path.join(base_dir, model_name)
     
     # Create directories
     os.makedirs(base_dir, exist_ok=True)
@@ -47,9 +80,18 @@ def setup_model_directory():
             shutil.rmtree(latest_dir)
     
     # Create new latest directory
-    shutil.copytree(version_dir, latest_dir)
+    os.makedirs(latest_dir, exist_ok=True)
     
-    return version_dir, latest_dir
+    # Save version info in the model directory
+    with open(os.path.join(version_dir, 'version.json'), 'w') as f:
+        json.dump({
+            "version_string": version_str,
+            "major": version["major"],
+            "minor": version["minor"],
+            "patch": version["patch"]
+        }, f, indent=4)
+    
+    return version_dir, latest_dir, model_name, version_str
 
 def preprocess_data(df):
     """Preprocess the motorcycle training data."""
@@ -109,8 +151,8 @@ def train_and_evaluate_model(X_train, X_test, y_train, y_test, feature_names):
     
     return model, metrics, feature_importance
 
-def save_model_artifacts(version_dir, latest_dir, model, label_encoders, features, metrics, feature_importance, training_file):
-    """Save all model-related artifacts."""
+def save_model_artifacts(version_dir, latest_dir, model, label_encoders, features, metrics, feature_importance, training_file, model_name, version_str):
+    """Save all model-related artifacts with descriptive names."""
     # Save model
     joblib.dump(model, os.path.join(version_dir, 'model.pkl'))
     joblib.dump(model, os.path.join(latest_dir, 'model.pkl'))
@@ -125,6 +167,9 @@ def save_model_artifacts(version_dir, latest_dir, model, label_encoders, feature
     
     # Save metrics and feature importance as JSON
     model_info = {
+        'model_name': model_name,
+        'version': version_str,
+        'r2_score': metrics['r2'],
         'training_file': training_file,
         'training_date': datetime.now().isoformat(),
         'metrics': metrics,
@@ -141,10 +186,6 @@ def main():
         # Get latest training file
         training_file = get_latest_training_file()
         logger.info(f"Using training data from: {training_file}")
-        
-        # Setup model directories
-        version_dir, latest_dir = setup_model_directory()
-        logger.info(f"Created model version directory: {version_dir}")
         
         # Load and preprocess data
         df = pd.read_csv(training_file)
@@ -172,6 +213,10 @@ def main():
             X_train, X_test, y_train, y_test, features
         )
         
+        # Now setup model directory with metrics and feature count
+        version_dir, latest_dir, model_name, version_str = setup_model_directory()
+        logger.info(f"Created model version directory: {version_dir}")
+        
         # Log metrics
         logger.info("\nModel Performance Metrics:")
         logger.info(f"Mean Absolute Error: {metrics['mae']:,.2f} PHP")
@@ -192,10 +237,14 @@ def main():
             features,
             metrics,
             feature_importance,
-            training_file
+            training_file,
+            model_name,
+            version_str
         )
         
-        logger.info(f"\nModel and artifacts saved in:")
+        logger.info(f"\nModel and artifacts saved as:")
+        logger.info(f"Model name: {model_name}")
+        logger.info(f"Version: {version_str}")
         logger.info(f"Version directory: {version_dir}")
         logger.info(f"Latest directory: {latest_dir}")
         

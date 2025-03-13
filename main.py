@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import predict  # Import the predict module
 import database  # Import the database module
+import training  # Import the training module
 
 app = FastAPI()
 
@@ -22,6 +23,7 @@ database.init_db()
 # Include routers
 app.include_router(predict.router)
 app.include_router(database.router, prefix="/api")  # Add prefix for database routes
+app.include_router(training.router)  # Include training router
 
 @app.on_event("startup")
 async def startup_event():

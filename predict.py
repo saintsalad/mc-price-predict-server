@@ -200,6 +200,44 @@ def load_latest_model():
 # Load the model and artifacts
 ml_model, label_encoders, model_features, model_info = load_latest_model()
 
+@router.get("/model")
+async def get_latest_model_info():
+    """
+    Get information about the latest machine learning model.
+    
+    Returns:
+        dict: Information about the model, including version, training date, metrics, and feature importance.
+    """
+    if model_info is None:
+        raise HTTPException(status_code=404, detail="Model information not found")
+    
+    # Extract metrics separately for cleaner structure
+    metrics = model_info.get("metrics", {})
+    
+    # Create a more organized response without redundancy
+    return {
+        "status": "success",
+        "model": {
+            "name": model_info.get("model_name", "MPP"),
+            "version": model_info.get("version", "v0.0.0"),
+            "training_date": model_info.get("training_date"),
+            "training_file": model_info.get("training_file")
+        },
+        "performance": {
+            "r2_score": metrics.get("r2", 0),
+            "mae": metrics.get("mae", 0),
+            "rmse": metrics.get("rmse", 0)
+        },
+        "specs": {
+            "features_count": len(model_features) if model_features else 0,
+            "encoders_count": len(label_encoders) if label_encoders else 0,
+            "top_features": [f["feature"] for f in model_info.get("feature_importance", [])[:5]] if model_info.get("feature_importance") else []
+        },
+        "status_details": {
+            "model_loaded": ml_model is not None
+        }
+    }
+
 def calculate_base_price(data: MotorcycleInput) -> tuple[float, int]:
     """Calculate base price with comprehensive adjustments"""
     metrics = PRICE_METRICS
@@ -537,7 +575,8 @@ async def predict_price(data: MotorcycleInput):
     try:
         logger.info(f"📝 New request: {data.brand} {data.model}")
 
-        if data.specifications.transmission not in TransmissionType:
+        # Check if transmission value is valid
+        if data.specifications.transmission not in [t.value for t in TransmissionType]:
             return {"error": "Invalid transmission type"}
 
         # Calculate base price and get ML prediction
