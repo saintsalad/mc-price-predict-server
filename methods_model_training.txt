@@ -1,0 +1,80 @@
+# Methods in the Motorcycle Price Predictor (MPP)
+
+This document describes the mathematical and statistical methods used in training the motorcycle price prediction model.
+
+## 1. Random Forest Regression
+
+The MPP uses Random Forest Regression as its core algorithm, which is an ensemble learning method that operates by constructing multiple decision trees during training.
+
+### Key Mathematical Components:
+
+- **Decision Trees**: Hierarchical models that make decisions based on asking questions about the features (e.g., "Is displacement > 150cc?")
+  
+- **Bootstrap Aggregation (Bagging)**: The algorithm creates n_estimators=200 trees, each trained on a random subset of the data, sampled with replacement.
+  
+- **Random Feature Selection**: At each split in each tree, only a random subset of features is considered, which helps reduce correlation between trees.
+
+- **Prediction Aggregation**: The final prediction is the average of predictions from all trees:
+  $\hat{y} = \frac{1}{T} \sum_{t=1}^{T} \hat{y}_t$
+  where T=200 is the number of trees and $\hat{y}_t$ is the prediction of an individual tree.
+
+- **Hyperparameters**:
+  - n_estimators = 200 (number of trees)
+  - max_depth = 20 (maximum tree depth)
+  - min_samples_split = 5 (minimum samples required to split a node)
+  - min_samples_leaf = 2 (minimum samples required at a leaf node)
+  - random_state = 42 (for reproducibility)
+  - n_jobs = -1 (use all available processors)
+
+## 2. Feature Importance
+
+The model calculates feature importance, which measures how much each feature contributes to the prediction accuracy:
+
+- **Mean Decrease in Impurity (MDI)**: Measures how much each feature decreases the weighted impurity across all trees.
+  
+- **Gini Importance**: For each feature, the sum of all decreases in impurity is calculated and normalized.
+  
+- **Mathematical Formula**:
+  $Importance(X_j) = \frac{1}{M} \sum_{m=1}^{M} \sum_{t \in T_m} p(t) \Delta i(X_j, t)$
+  where $\Delta i(X_j, t)$ is the decrease in impurity from splitting on feature $X_j$ at node $t$.
+
+## 3. Evaluation Metrics
+
+The model employs multiple metrics to evaluate performance:
+
+### Mean Absolute Error (MAE)
+Measures the average magnitude of errors without considering direction:
+$MAE = \frac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i|$
+
+### Mean Squared Error (MSE)
+Measures the average of squared errors, which penalizes larger errors more heavily:
+$MSE = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2$
+
+### Root Mean Squared Error (RMSE)
+The square root of MSE, which provides a measure in the same units as the target variable (PHP):
+$RMSE = \sqrt{MSE} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2}$
+
+### R-squared (R²)
+Indicates the proportion of variance in the dependent variable explained by the model:
+$R^2 = 1 - \frac{\sum_{i=1}^{n} (y_i - \hat{y}_i)^2}{\sum_{i=1}^{n} (y_i - \bar{y})^2}$
+
+## 4. Data Preprocessing Methods
+
+### Label Encoding
+Categorical variables like 'brand', 'model', 'category', 'transmission', 'sellerType', and 'owner' are converted to numeric values:
+$LabelEncode(x) = unique\_index(x)$
+
+### Train-Test Split
+Data is split into 80% training and 20% testing using stratified sampling to ensure similar distributions.
+
+## 5. Post-Processing Methods
+
+After obtaining the raw model predictions, the MPP applies:
+
+- **Outlier Detection**: Comparing predictions to rule-based estimates and adjusting extreme values.
+- **Non-linear Mileage Depreciation**: Using interpolated bracket-based depreciation curves.
+- **Market-Specific Adjustments**: Applying multipliers for popular models and market regions.
+
+## 6. Version Control
+
+The model implements semantic versioning (MPP_vX.Y.Z) with incremental updates, preserving model history and allowing for performance comparison across versions. 

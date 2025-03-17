@@ -1,13 +1,13 @@
 {
-    "model_name": "MPP_v1.0.0",
-    "version": "v1.0.0",
+    "model_name": "MPP_v1.0.3",
+    "version": "v1.0.3",
     "r2_score": 0.9834521715424375,
-    "training_file": "training_data\\training_records_20250313_131255.csv",
-    "training_date": "2025-03-13T13:12:57.741328",
+    "training_file": "training_data\\training_records_20250313_152116.csv",
+    "training_date": "2025-03-13T15:21:18.616673",
     "metrics": {
-        "mae": 3496.6307391775017,
-        "mse": 17917871.154475078,
-        "rmse": 4232.95064399233,
+        "mae": 3496.630739177498,
+        "mse": 17917871.154475037,
+        "rmse": 4232.950643992324,
         "r2": 0.9834521715424375
     },
     "feature_importance": [

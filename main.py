@@ -23,7 +23,7 @@ database.init_db()
 # Include routers
 app.include_router(predict.router)
 app.include_router(database.router, prefix="/api")  # Add prefix for database routes
-app.include_router(training.router)  # Include training router
+app.include_router(training.router)  # Include the training router
 
 @app.on_event("startup")
 async def startup_event():

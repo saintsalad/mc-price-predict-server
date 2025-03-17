@@ -598,3 +598,14 @@ async def predict_price(data: MotorcycleInput):
             status_code=500,
             detail={"error": "Prediction failed", "message": str(e)}
         )
+
+def reload_model():
+    """Reload the latest model and artifacts from disk"""
+    global ml_model, label_encoders, model_features, model_info
+    ml_model, label_encoders, model_features, model_info = load_latest_model()
+    if ml_model is not None:
+        logger.info("✅ ML Model reloaded successfully")
+        return True
+    else:
+        logger.error("❌ Failed to reload ML model")
+        return False

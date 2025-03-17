@@ -4,6 +4,7 @@ import json
 import datetime
 from fastapi import APIRouter, BackgroundTasks
 from typing import Dict, Any
+import predict  # Import the predict module to access reload function
 
 # Create a router for the training endpoints
 router = APIRouter()
@@ -59,7 +60,14 @@ def run_training_process():
         training_status["is_training"] = False
         training_status["last_training"] = datetime.datetime.now().isoformat()
         training_status["status"] = "completed"
-        training_status["message"] = f"Training completed successfully. New model version: MPP_{version_info}"
+        
+        # Reload the model in memory
+        model_reloaded = predict.reload_model()
+        
+        if model_reloaded:
+            training_status["message"] = f"Training completed successfully. New model version: MPP_{version_info} has been loaded."
+        else:
+            training_status["message"] = f"Training completed successfully with version MPP_{version_info}, but model couldn't be reloaded automatically."
         
     except subprocess.CalledProcessError as e:
         # Handle errors
